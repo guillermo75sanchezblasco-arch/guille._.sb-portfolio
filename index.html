@@ -822,6 +822,70 @@ function gt(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'})
     shine.style.opacity = '1';
     glare.style.opacity = '1';
   });
+
+  // ── TOUCH EVENTS (móvil) ──
+  function applyTilt(clientX, clientY) {
+    cancelAnimationFrame(animFrame);
+    animFrame = requestAnimationFrame(() => {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+      const dx = Math.max(-1, Math.min(1, (clientX - cx) / (rect.width  / 2)));
+      const dy = Math.max(-1, Math.min(1, (clientY - cy) / (rect.height / 2)));
+
+      const rotX = -dy * MAX_TILT;
+      const rotY =  dx * MAX_TILT;
+
+      card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.03)`;
+      card.style.boxShadow = `${-rotY * 1.5}px ${rotX * 1.5}px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08)`;
+
+      const px = ((clientX - rect.left) / rect.width)  * 100;
+      const py = ((clientY - rect.top)  / rect.height) * 100;
+
+      shine.style.opacity = '1';
+      shine.style.background = `linear-gradient(
+        ${115 + rotY * 2}deg,
+        transparent 0%,
+        rgba(255,0,128,${0.12 + Math.abs(dx)*0.15})   ${px * 0.2}%,
+        rgba(255,165,0,${0.12 + Math.abs(dy)*0.15})   ${px * 0.4}%,
+        rgba(255,255,0,0.1)                            ${px * 0.55}%,
+        rgba(0,255,128,${0.12 + Math.abs(dx)*0.12})   ${px * 0.7}%,
+        rgba(0,200,255,${0.12 + Math.abs(dy)*0.15})   ${px * 0.85}%,
+        rgba(128,0,255,0.1)                            100%
+      )`;
+      glare.style.opacity = '1';
+      glare.style.background = `radial-gradient(
+        ellipse at ${px}% ${py}%,
+        rgba(255,255,255,${MAX_GLARE * (1 - Math.abs(dx) * 0.3)}) 0%,
+        transparent 65%
+      )`;
+    });
+  }
+
+  function resetTilt() {
+    cancelAnimationFrame(animFrame);
+    card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+    card.style.boxShadow = '0 8px 32px rgba(0,0,0,0.6)';
+    shine.style.opacity  = '0';
+    glare.style.opacity  = '0';
+  }
+
+  wrap.addEventListener('touchstart', e => {
+    e.preventDefault();
+    shine.style.opacity = '1';
+    glare.style.opacity = '1';
+  }, { passive: false });
+
+  wrap.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    applyTilt(t.clientX, t.clientY);
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', () => {
+    setTimeout(resetTilt, 300);
+  });
+
 })();
 
 </script>
